@@ -1,0 +1,30 @@
+import glob
+import os
+from pathlib import Path
+import csv
+import datetime
+import pandas as pd
+import numpy as np
+
+
+def prepareDataForNYISO(columnName, zoneName):
+    root_dir = '/dataset/NYISO'
+    fullpath = os.getcwd()
+
+    projectPath = Path(fullpath).parents[0]
+    datasetDirectoryPath = Path(str(projectPath) + root_dir)
+
+    data = []
+    for file in sorted(datasetDirectoryPath.iterdir()):
+        print(file)
+        if Path.is_dir(file):
+            print('is dir')
+            for f in sorted(file.iterdir()):
+
+                df = pd.read_csv(f, index_col=None, header=0)
+                edited_df = df.loc[df[columnName] == zoneName]
+                data.append(edited_df)
+
+    print(data)
+
+prepareDataForNYISO('Name', 'LONGIL')
