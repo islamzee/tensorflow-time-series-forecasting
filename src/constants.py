@@ -1,0 +1,3 @@
+EPOCH_SIZE = 100
+BATCH_SIZE = 1
+MODEL_FILE_NAME = 'lstm_pred.h5'
