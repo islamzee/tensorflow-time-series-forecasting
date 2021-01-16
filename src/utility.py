@@ -8,21 +8,26 @@ def prepareDataForNYISO(columnName, zoneName):
     projectPath = Path(fullpath).parents[0]
     datasetDirectoryPath = Path(str(projectPath) + root_dir)
 
+    if Path(datasetDirectoryPath, FILENAME_NYISO_PREPARED_DATASET).exists():
+        return pd.read_csv(os.path.join(datasetDirectoryPath, FILENAME_NYISO_PREPARED_DATASET), index_col='Time Stamp')
+
     data = []
     totalDataSize = 0
     for file in sorted(datasetDirectoryPath.iterdir()):
         if Path.is_dir(file):
             for f in sorted(file.iterdir()):
-                df = pd.read_csv(f, index_col=None, header=0)
+                df = pd.read_csv(f, parse_dates=True, index_col='Time Stamp', header=0)
+                df.index = pd.to_datetime(df.index, format="%Y-%m-%d-%H-%M-%S")
 
                 edited_df = df.loc[df[columnName] == zoneName]
-                # print('editedDfSize: ', edited_df.size)
+                edited_df = edited_df[NYISO_LBMP_COL_NAME]
                 data.append(edited_df)
                 totalDataSize = totalDataSize + edited_df.size
-                # print('--- Size of new data after append: ', totalDataSize)
+                print('--- Size of new data after append: ', totalDataSize, ' File: ', f)
 
     df = pd.concat(data)
-    return df.reset_index(drop=True)
+    df.to_csv(os.path.join(datasetDirectoryPath, FILENAME_NYISO_PREPARED_DATASET))
+    return df
 
 
 # convert an array of values into a dataset matrix
@@ -31,5 +36,18 @@ def create_dataset(dataset, look_back=1):
     for i in range(len(dataset) - look_back - 1):
         a = dataset[i:(i + look_back), 0]
         dataX.append(a)
-        dataY.append(dataset[i + look_back, 0])
+        dataY.append([dataset[i + look_back, 0]])
     return np.array(dataX), np.array(dataY)
+
+def visualize_loss(history, title):
+    loss = history.history["loss"]
+    val_loss = history.history["val_loss"]
+    epochs = range(len(loss))
+    plt.figure()
+    plt.plot(epochs, loss, "b", label="Training loss")
+    plt.plot(epochs, val_loss, "r", label="Validation loss")
+    plt.title(title)
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show()
