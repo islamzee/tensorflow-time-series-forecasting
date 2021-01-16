@@ -39,15 +39,11 @@ def create_dataset(dataset, look_back=1):
         dataY.append([dataset[i + look_back, 0]])
     return np.array(dataX), np.array(dataY)
 
-def visualize_loss(history, title):
-    loss = history.history["loss"]
-    val_loss = history.history["val_loss"]
-    epochs = range(len(loss))
-    plt.figure()
-    plt.plot(epochs, loss, "b", label="Training loss")
-    plt.plot(epochs, val_loss, "r", label="Validation loss")
-    plt.title(title)
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.show()
+
+def alignInputInSamples(input, yearsInInputData):
+    data = []
+    for year in yearsInInputData:
+        sample = input.loc[pd.to_datetime(input.index).year == year]
+        data = [data, sample]
+
+    return data˚
