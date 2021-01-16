@@ -46,4 +46,4 @@ def alignInputInSamples(input, yearsInInputData):
         sample = input.loc[pd.to_datetime(input.index).year == year]
         data = [data, sample]
 
-    return data˚
+    return data
