@@ -1,15 +1,15 @@
 from importlibs import *
 
 
-def prepareDataForNYISO(columnName, zoneName):
-    root_dir = '/dataset/NYISO'
+def prepareDataFor(regionalISOName, columnName, zoneName, dateTimeColumnName):
+    root_dir = '/dataset/' + regionalISOName
     fullpath = os.getcwd()
 
     projectPath = Path(fullpath).parents[0]
     datasetDirectoryPath = Path(str(projectPath) + root_dir)
 
-    if Path(datasetDirectoryPath, FILENAME_NYISO_PREPARED_DATASET).exists():
-        return pd.read_csv(os.path.join(datasetDirectoryPath, FILENAME_NYISO_PREPARED_DATASET), index_col='Time Stamp')
+    if Path(datasetDirectoryPath, FILENAME_PREPARED_DATASET).exists():
+        return pd.read_csv(os.path.join(datasetDirectoryPath, FILENAME_PREPARED_DATASET), index_col=dateTimeColumnName)
 
     data = []
     totalDataSize = 0
@@ -26,7 +26,7 @@ def prepareDataForNYISO(columnName, zoneName):
                 print('--- Size of new data after append: ', totalDataSize, ' File: ', f)
 
     df = pd.concat(data)
-    df.to_csv(os.path.join(datasetDirectoryPath, FILENAME_NYISO_PREPARED_DATASET))
+    df.to_csv(os.path.join(datasetDirectoryPath, FILENAME_PREPARED_DATASET))
     return df
 
 
@@ -38,12 +38,3 @@ def create_dataset(dataset, look_back=1):
         dataX.append(a)
         dataY.append([dataset[i + look_back, 0]])
     return np.array(dataX), np.array(dataY)
-
-
-def alignInputInSamples(input, yearsInInputData):
-    data = []
-    for year in yearsInInputData:
-        sample = input.loc[pd.to_datetime(input.index).year == year]
-        data = [data, sample]
-
-    return data
