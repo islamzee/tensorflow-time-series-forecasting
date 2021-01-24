@@ -3,11 +3,12 @@ import glob
 from utility import *
 
 switcher = {
-        'NYISO' :  ['Name', 'LONGIL'],
-        'PJM' : ['Name', 'PJM'],
-        'CAISO' : ['hub', 'TH_NP15']
+        'NYISO' :  ['Time Stamp', 'Name', 'LONGIL', NYISO_LBMP_COL_NAME],
+        'PJM' : ['Time Stamp', 'Name', 'PJM', NYISO_LBMP_COL_NAME],
+        'CAISO' : ['Date', 'hub', 'TH_NP15', 'price' ]
     }
     # in case of ISONE, just append the csv's
 
 regionName = 'CAISO'
-input = prepareDataFor(regionName, switcher[regionName][0], switcher[regionName][1])
+input = prepareDataFor(regionName,
+                       switcher[regionName][0], switcher[regionName][1], switcher[regionName][2], switcher[regionName][3])

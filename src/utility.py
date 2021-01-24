@@ -1,7 +1,7 @@
 from importlibs import *
 
 
-def prepareDataFor(regionalISOName, columnName, zoneName, dateTimeColumnName):
+def prepareDataFor(regionalISOName, dateTimeColumnName, zoneFilterColumnName, zoneName, lbmpColumnName):
     root_dir = '/dataset/' + regionalISOName
     fullpath = os.getcwd()
 
@@ -16,14 +16,15 @@ def prepareDataFor(regionalISOName, columnName, zoneName, dateTimeColumnName):
     for file in sorted(datasetDirectoryPath.iterdir()):
         if Path.is_dir(file):
             for f in sorted(file.iterdir()):
-                df = pd.read_csv(f, parse_dates=True, index_col='Time Stamp', header=0)
-                df.index = pd.to_datetime(df.index, format="%Y-%m-%d-%H-%M-%S")
+                if f.name.endswith('.csv'):
+                    df = pd.read_csv(f, parse_dates=True, index_col=dateTimeColumnName, header=0)
+                    df.index = pd.to_datetime(df.index, format="%Y-%m-%d-%H-%M-%S")
 
-                edited_df = df.loc[df[columnName] == zoneName]
-                edited_df = edited_df[NYISO_LBMP_COL_NAME]
-                data.append(edited_df)
-                totalDataSize = totalDataSize + edited_df.size
-                print('--- Size of new data after append: ', totalDataSize, ' File: ', f)
+                    edited_df = df.loc[df[zoneFilterColumnName] == zoneName]
+                    edited_df = edited_df[lbmpColumnName]
+                    data.append(edited_df)
+                    totalDataSize = totalDataSize + edited_df.size
+                    print('--- Size of new data after append: ', totalDataSize, ' File: ', f)
 
     df = pd.concat(data)
     df.to_csv(os.path.join(datasetDirectoryPath, FILENAME_PREPARED_DATASET))
