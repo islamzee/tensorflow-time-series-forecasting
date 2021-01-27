@@ -1,14 +1,18 @@
 from importlibs import *
 import glob
+
+from lstm_proper import lstmModelFileExists
 from utility import *
 
 switcher = {
-        'NYISO' :  ['Time Stamp', 'Name', 'LONGIL', NYISO_LBMP_COL_NAME],
-        'PJM' : ['Time Stamp', 'Name', 'PJM', NYISO_LBMP_COL_NAME],
-        'CAISO' : ['Date', 'hub', 'TH_NP15', 'price' ]
+        'NYISO' :  ['Time Stamp', 'Name', 'LONGIL', 'LBMP ($/MWHr)'],
+        'PJM' : ['Time Stamp', 'Name', 'PJM', 'LBMP ($/MWHr)'],
+        'CAISO' : ['Date', 'hub', 'TH_NP15', 'price'],
+        'ISONE': ['Time', None, None, '$/MWh']
     }
     # in case of ISONE, just append the csv's
 
-regionName = 'CAISO'
-input = prepareDataFor(regionName,
-                       switcher[regionName][0], switcher[regionName][1], switcher[regionName][2], switcher[regionName][3])
+regional_ISO_name = 'ISONE'
+# input = prepareDataFor(True, regional_ISO_name, switcher[regional_ISO_name][0], switcher[regional_ISO_name][1], switcher[regional_ISO_name][2], switcher[regional_ISO_name][3])
+
+print('model file exists: ', lstmModelFileExists(regional_ISO_name))
