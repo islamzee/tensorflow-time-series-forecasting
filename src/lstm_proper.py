@@ -42,11 +42,15 @@ def run_LSTM(regional_ISO_name):
                   epochs=EPOCH_SIZE, batch_size=BATCH_SIZE,
                   validation_data=(testX, testY),
                   verbose=1)
-
-        model.save(FILE_NAME_LSTM_MODEL)  # creates a HDF5 file 'my_model.h5'
-
-    # returns a compiled model identical to the previous one
-    model = load_model(FILE_NAME_LSTM_MODEL)
+        root_dir = '/output/' + regional_ISO_name
+        fullpath = os.getcwd()
+        projectPath = Path(fullpath).parents[0]
+        outputDirPath = Path(str(projectPath) + root_dir)
+        model.save(os.path.join(outputDirPath, FILE_NAME_LSTM_MODEL))  # creates a HDF5 file 'my_model.h5'
+    else:
+        # returns a compiled model identical to the previous one
+        directoryPath = '../output/' + regional_ISO_name + '/'
+        model = load_model(directoryPath + FILE_NAME_LSTM_MODEL)
     # ------------------------------------------------------------
 
     label_dataset = fetchData(True, regional_ISO_name)
@@ -54,7 +58,7 @@ def run_LSTM(regional_ISO_name):
     # normalize label_dataset
     label_dataset = pd.DataFrame(scaler.fit_transform(label_dataset.values.reshape(-1, 1)), index=label_dataset.index)
 
-    futureX, futureY = create_dataset(label_dataset)
+    futureX, futureY = create_dataset(label_dataset.values, LOOK_BACK)
     futureX = np.reshape(futureX, (futureX.shape[0], futureX.shape[1], 1))
 
     # make predictions
@@ -70,6 +74,8 @@ def run_LSTM(regional_ISO_name):
     futurePredict = scaler.inverse_transform(futurePredict)
     futureY = scaler.inverse_transform(futureY)
 
+    #invert label_dataset
+    label_dataset = pd.DataFrame(scaler.inverse_transform(label_dataset), index=label_dataset.index)
 
     # calculate root mean squared error
     trainScore = math.sqrt(mean_squared_error(trainY, trainPredict[:, 0]))
@@ -78,7 +84,6 @@ def run_LSTM(regional_ISO_name):
     print('Test Score: %.2f RMSE' % (testScore))
     futureScore = math.sqrt(mean_squared_error(futureY, futurePredict[:, 0]))
     print('Future Predict Score: %.2f RMSE' % (futureScore))
-
 
     # shift train predictions for plotting
     trainPredictPlot = np.empty_like(dataset)
@@ -90,17 +95,30 @@ def run_LSTM(regional_ISO_name):
     testPredictPlot[len(trainPredict) + (LOOK_BACK * 2) + 1:len(dataset) - 1, :] = testPredict
     # testPredictPlot[len(trainPredict)+(LOOK_BACK*2)+1:1800-1, :] = testPredict
 
-    #shift future predictions for plotting
+    # shift future predictions for plotting
+    futurePredictPlot = np.empty(dataset.size + len(futurePredict))
+    futurePredictPlot[:] = np.nan
+    futurePredictPlot[dataset.size: dataset.size + len(futurePredict)] = futurePredict[:,0]
 
     # plot baseline and predictions
     xAxis = dataset.index.to_numpy()
-    df = pd.DataFrame(index=dataset.index)
-    df['dataset'] = scaler.inverse_transform(dataset)
-    df['train'] = trainPredictPlot
-    df['test'] = testPredictPlot
+    df = pd.DataFrame(index=dataset.index.append(label_dataset.index), columns=('dataset','train','test','future'))
+    fullData = np.append(dataset.values, label_dataset)
+    df['dataset'][:] = pd.Series(fullData.flatten())
 
-    fig = df.plot(y=['dataset', 'train', 'test'], use_index=True, x_compat=True).get_figure()
-    fig.savefig('Plot_LSTM.pdf')
+    df['train'][0:trainPredictPlot.size] = pd.Series(trainPredictPlot.flatten())
+    df['test'][0:testPredictPlot.size] = pd.Series(testPredictPlot.flatten())
+    df['future'][0:futurePredictPlot.size] = pd.Series(futurePredictPlot.flatten())
+
+    # fig = df.plot(y=['dataset', 'train', 'test','future'], use_index=True, x_compat=True).get_figure()
+    # df.plot(y=['dataset', 'train', 'test','future'], use_index=True, x_compat=True).show()
+    # fig.savefig('Plot_LSTM.pdf')
+    xAxis = label_dataset.index.to_numpy()
+    plt.plot(xAxis, label_dataset.values, label = 'label')
+    y = np.concatenate([futurePredict[:,0], np.zeros(13)])
+    plt.plot(xAxis, y, label='predicted')
+    plt.legend()
+    plt.show()
 
 
 # ==========================================================================================================

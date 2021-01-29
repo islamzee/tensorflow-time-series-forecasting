@@ -57,7 +57,7 @@ def prepareDataFor(isLabel: bool, regionalISOName, dateTimeColumnName, zoneFilte
 def create_dataset(dataset, look_back=1):
     dataX, dataY = [], []
     for i in range(len(dataset) - look_back - 1):
-        a = dataset[i:(i + look_back), 0]
+        a = dataset[i:(i + look_back)]
         dataX.append(a)
         dataY.append([dataset[i + look_back, 0]])
     return np.array(dataX), np.array(dataY)
@@ -69,3 +69,10 @@ def lstmModelFileExists(regional_ISO_name):
     projectPath = Path(fullpath).parents[0]
     outputDirPath = Path(str(projectPath) + root_dir)
     return os.path.exists(os.path.join(outputDirPath, FILE_NAME_LSTM_MODEL))
+
+def loadModelFile(regional_ISO_name):
+    root_dir = '/output/' + regional_ISO_name
+    fullpath = os.getcwd()
+    projectPath = Path(fullpath).parents[0]
+    outputDirPath = Path(str(projectPath) + root_dir)
+    return load_model(os.path.join(outputDirPath, FILE_NAME_LSTM_MODEL))
