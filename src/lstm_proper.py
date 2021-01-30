@@ -33,7 +33,6 @@ def run_LSTM(regional_ISO_name):
 
     # create and fit the LSTM network
     model = Sequential()
-    # if not os.path.exists(FILE_NAME_LSTM_MODEL):
     if not lstmModelFileExists(regional_ISO_name):
         model.add(LSTM(units=4, input_shape=(LOOK_BACK, 1)))
         model.add(Dense(1))
@@ -74,7 +73,7 @@ def run_LSTM(regional_ISO_name):
     futurePredict = scaler.inverse_transform(futurePredict)
     futureY = scaler.inverse_transform(futureY)
 
-    #invert label_dataset
+    # invert label_dataset
     label_dataset = pd.DataFrame(scaler.inverse_transform(label_dataset), index=label_dataset.index)
 
     # calculate root mean squared error
@@ -85,40 +84,39 @@ def run_LSTM(regional_ISO_name):
     futureScore = math.sqrt(mean_squared_error(futureY, futurePredict[:, 0]))
     print('Future Predict Score: %.2f RMSE' % (futureScore))
 
-    # shift train predictions for plotting
-    trainPredictPlot = np.empty_like(dataset)
-    trainPredictPlot[:, :] = np.nan
-    trainPredictPlot[LOOK_BACK:len(trainPredict) + LOOK_BACK, :] = trainPredict
-    # shift test predictions for plotting
-    testPredictPlot = np.empty_like(dataset)
-    testPredictPlot[:, :] = np.nan
-    testPredictPlot[len(trainPredict) + (LOOK_BACK * 2) + 1:len(dataset) - 1, :] = testPredict
-    # testPredictPlot[len(trainPredict)+(LOOK_BACK*2)+1:1800-1, :] = testPredict
-
-    # shift future predictions for plotting
-    futurePredictPlot = np.empty(dataset.size + len(futurePredict))
-    futurePredictPlot[:] = np.nan
-    futurePredictPlot[dataset.size: dataset.size + len(futurePredict)] = futurePredict[:,0]
+    # ------
 
     # plot baseline and predictions
-    xAxis = dataset.index.to_numpy()
-    df = pd.DataFrame(index=dataset.index.append(label_dataset.index), columns=('dataset','train','test','future'))
+    df = pd.DataFrame(index=dataset.index.append(label_dataset.index), columns=('dataset', 'train', 'test', 'future'))
     fullData = np.append(dataset.values, label_dataset)
     df['dataset'][:] = pd.Series(fullData.flatten())
 
-    df['train'][0:trainPredictPlot.size] = pd.Series(trainPredictPlot.flatten())
-    df['test'][0:testPredictPlot.size] = pd.Series(testPredictPlot.flatten())
-    df['future'][0:futurePredictPlot.size] = pd.Series(futurePredictPlot.flatten())
+    df['train'][0:len(trainPredict)] = pd.Series(trainPredict.flatten())
+    df['test'][0:len(testPredict)] = pd.Series(testPredict.flatten())
+    df['future'][0:len(futurePredict)] = pd.Series(futurePredict.flatten())
 
     # fig = df.plot(y=['dataset', 'train', 'test','future'], use_index=True, x_compat=True).get_figure()
     # df.plot(y=['dataset', 'train', 'test','future'], use_index=True, x_compat=True).show()
     # fig.savefig('Plot_LSTM.pdf')
+
     xAxis = label_dataset.index.to_numpy()
-    plt.plot(xAxis, label_dataset.values, label = 'label')
-    y = np.concatenate([futurePredict[:,0], np.zeros(13)])
-    plt.plot(xAxis, y, label='predicted')
+
+    f1 = plt.figure()
+    df.plot(y=['dataset', 'train', 'test'], use_index=True, x_compat=True)
+    plt.savefig('../output/'
+                + regional_ISO_name + '/'
+                + regional_ISO_name + SUB_FILE_NAME_PLOT_DATASET)
+
+    f2 = plt.figure()
+    plt.plot(xAxis, label_dataset.values, label='Actual', color="blue")
+    y = np.concatenate([futurePredict[:, 0], np.zeros(13)])
+    plt.plot(xAxis, y, label='Predicted', color="green")
     plt.legend()
-    plt.show()
+    plt.title(regional_ISO_name + ': 1 Dec 2020')
+    plt.savefig('../output/'
+                + regional_ISO_name + '/'
+                + regional_ISO_name + SUB_FILE_NAME_PLOT_FUTURE)
+
 
 
 # ==========================================================================================================
