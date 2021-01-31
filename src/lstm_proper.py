@@ -14,10 +14,7 @@ def run_LSTM(regional_ISO_name):
 
     # split into train and test sets
     train_size = int(len(dataset) * SPLIT_FRACTION)
-    # train_size = 1000
-    # test_size = 800
     train, test = dataset.iloc[0:train_size, :], dataset.iloc[train_size:len(dataset), :]
-    # train, test = dataset.iloc[0:train_size,:], dataset.iloc[train_size:1800,:]
 
     train = pd.DataFrame(scaler.fit_transform(train.values.reshape(-1, 1)), index=train.index)
     test = pd.DataFrame(scaler.fit_transform(test.values.reshape(-1, 1)), index=test.index)
@@ -61,15 +58,15 @@ def run_LSTM(regional_ISO_name):
     futureX = np.reshape(futureX, (futureX.shape[0], futureX.shape[1], 1))
 
     # make predictions
-    trainPredict = model.predict(trainX)
-    testPredict = model.predict(testX)
+    # trainPredict = model.predict(trainX)
+    # testPredict = model.predict(testX)
     futurePredict = model.predict(futureX)
 
     # invert predictions
-    trainPredict = scaler.inverse_transform(trainPredict)
-    trainY = scaler.inverse_transform(trainY)
-    testPredict = scaler.inverse_transform(testPredict)
-    testY = scaler.inverse_transform(testY)
+    # trainPredict = scaler.inverse_transform(trainPredict)
+    # trainY = scaler.inverse_transform(trainY)
+    # testPredict = scaler.inverse_transform(testPredict)
+    # testY = scaler.inverse_transform(testY)
     futurePredict = scaler.inverse_transform(futurePredict)
     futureY = scaler.inverse_transform(futureY)
 
@@ -77,10 +74,10 @@ def run_LSTM(regional_ISO_name):
     label_dataset = pd.DataFrame(scaler.inverse_transform(label_dataset), index=label_dataset.index)
 
     # calculate root mean squared error
-    trainScore = math.sqrt(mean_squared_error(trainY, trainPredict[:, 0]))
-    print('Train Score: %.2f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(testY, testPredict[:, 0]))
-    print('Test Score: %.2f RMSE' % (testScore))
+    # trainScore = math.sqrt(mean_squared_error(trainY, trainPredict[:, 0]))
+    # print('Train Score: %.2f RMSE' % (trainScore))
+    # testScore = math.sqrt(mean_squared_error(testY, testPredict[:, 0]))
+    # print('Test Score: %.2f RMSE' % (testScore))
     futureScore = math.sqrt(mean_squared_error(futureY, futurePredict[:, 0]))
     print('Future Predict Score: %.2f RMSE' % (futureScore))
 
@@ -91,34 +88,41 @@ def run_LSTM(regional_ISO_name):
     fullData = np.append(dataset.values, label_dataset)
     df['dataset'][:] = pd.Series(fullData.flatten())
 
-    df['train'][0:len(trainPredict)] = pd.Series(trainPredict.flatten())
-    df['test'][0:len(testPredict)] = pd.Series(testPredict.flatten())
-    df['future'][0:len(futurePredict)] = pd.Series(futurePredict.flatten())
+    # df['train'][0:len(trainPredict)] = pd.Series(trainPredict.flatten())
+    # df['test'][0:len(testPredict)] = pd.Series(testPredict.flatten())
+    # df['future'][0:len(futurePredict)] = pd.Series(futurePredict.flatten())
 
-    # fig = df.plot(y=['dataset', 'train', 'test','future'], use_index=True, x_compat=True).get_figure()
-    # df.plot(y=['dataset', 'train', 'test','future'], use_index=True, x_compat=True).show()
-    # fig.savefig('Plot_LSTM.pdf')
+    future_datetime_arr = pd.date_range(start='2020-12-01 00:00:00', freq='5T', periods=len(futurePredict))
+    df_future = pd.DataFrame({'Predicted':futurePredict[:,0],'Actual':futureY[:,0]},
+                            index=future_datetime_arr)
 
+    # ========= PLOT =======
     xAxis = label_dataset.index.to_numpy()
 
-    f1 = plt.figure()
+    # f1 = plt.figure()
     df.plot(y=['dataset', 'train', 'test'], use_index=True, x_compat=True)
     plt.savefig('../output/'
                 + regional_ISO_name + '/'
                 + regional_ISO_name + SUB_FILE_NAME_PLOT_DATASET)
 
-    f2 = plt.figure()
-    plt.plot(xAxis, label_dataset.values, label='Actual', color="blue")
-    y = np.concatenate([futurePredict[:, 0], np.zeros(13)])
-    plt.plot(xAxis, y, label='Predicted', color="green")
-    plt.legend()
-    plt.title(regional_ISO_name + ': 1 Dec 2020')
+    # f2 = plt.figure()
+    # plt.plot(xAxis, label_dataset.values, label='Actual', color="blue")
+    # y = np.concatenate([futurePredict[:, 0], np.zeros(13)])
+    # plt.plot(xAxis, y, label='Predicted', color="green")
+    # plt.legend()
+    # plt.title(regional_ISO_name + ': 1 Dec 2020')
+    # plt.savefig('../output/'
+    #             + regional_ISO_name + '/'
+    #             + regional_ISO_name + SUB_FILE_NAME_PLOT_FUTURE)
+
+
+    # f3 = plt.figure()
+    df_future.plot(use_index=True, x_compat=True)
     plt.savefig('../output/'
                 + regional_ISO_name + '/'
                 + regional_ISO_name + SUB_FILE_NAME_PLOT_FUTURE)
-
-
+    plt.show()
 
 # ==========================================================================================================
 
-run_LSTM('ISONE')
+run_LSTM('PJM')
