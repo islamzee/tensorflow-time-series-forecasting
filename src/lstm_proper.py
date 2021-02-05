@@ -78,7 +78,7 @@ def run_LSTM(regional_ISO_name):
     # print('Train Score: %.2f RMSE' % (trainScore))
     # testScore = math.sqrt(mean_squared_error(testY, testPredict[:, 0]))
     # print('Test Score: %.2f RMSE' % (testScore))
-    futureScore = math.sqrt(mean_squared_error(futureY, futurePredict[:, 0]))
+    futureScore = sqrt(mean_squared_error(futureY, futurePredict[:, 0]))
     print('Future Predict Score: %.2f RMSE' % (futureScore))
 
     # ------

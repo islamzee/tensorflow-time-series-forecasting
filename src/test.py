@@ -9,8 +9,5 @@ from utility import *
 # f1.show()
 # plt.show()
 
-regionalISOName='PJM'
-prepareDataFor(True, regionalISOName, switcher[regionalISOName][0],
-                        switcher[regionalISOName][1],
-                        switcher[regionalISOName][2],
-                        switcher[regionalISOName][3])
+print(arimaPredictionExistsFor('CAISO'))
+

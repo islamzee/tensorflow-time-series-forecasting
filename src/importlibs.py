@@ -6,7 +6,7 @@ from pathlib import *
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import math
+from math import *
 import keras
 from keras.models import *
 from keras.layers import Dense
