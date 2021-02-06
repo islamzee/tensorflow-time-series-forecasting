@@ -149,8 +149,12 @@ def invert_scale(scaler, X, value):
     return inverted[0, -1]
 
 
-def getOutputPathForModelFile(regional_ISO_name, filename):
+def getOutputPathForISO(regional_ISO_name):
     root_dir = '/output/' + regional_ISO_name
     fullpath = os.getcwd()
-    projectPath = Path(fullpath).parents[0]
-    return os.path.join(Path(str(projectPath) + root_dir, filename))
+    project_path = Path(fullpath).parents[0]
+    return os.path.join(Path(str(project_path) + root_dir))
+
+
+def getOutputPathForModelFile(regional_ISO_name, filename):
+    return os.path.join(getOutputPathForISO(regional_ISO_name), filename)
