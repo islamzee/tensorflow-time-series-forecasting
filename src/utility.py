@@ -21,7 +21,8 @@ def fetchData(isLabel: bool, regionalISOName):
 
 
 def prepareDataFor(isLabel: bool, regionalISOName, dateTimeColumnName, zoneFilterColumnName, zoneName, lbmpColumnName):
-    root_dir = '/dataset/' + regionalISOName
+    innerDirPath = regionalISOName
+    root_dir = '/dataset/' + innerDirPath
     if isLabel:
         root_dir = '/labels/' + regionalISOName
 
@@ -35,7 +36,7 @@ def prepareDataFor(isLabel: bool, regionalISOName, dateTimeColumnName, zoneFilte
     data = []
     totalDataSize = 0
     for file in sorted(datasetDirectoryPath.iterdir()):
-        if Path.is_dir(file):
+        if Path.is_dir(file) and file.name == DIRECTORY_DATASET_DEC_1999_2019:
             for f in sorted(file.iterdir()):
                 if f.name.endswith('.csv'):
                     df = pd.read_csv(f, parse_dates=True, index_col=dateTimeColumnName, header=0)
@@ -158,3 +159,43 @@ def getOutputPathForISO(regional_ISO_name):
 
 def getOutputPathForModelFile(regional_ISO_name, filename):
     return os.path.join(getOutputPathForISO(regional_ISO_name), filename)
+
+
+def moving_test_window_preds(model, futureX, n_future_preds=288):
+    ''' n_future_preds - Represents the number of future predictions we want to make
+                         This coincides with the number of windows that we will move forward
+                         on the test data
+    '''
+    preds_moving = []  # Use this to store the prediction made on each test window
+    moving_test_window = [futureX[0,:].tolist()]  # Creating the first test window
+    moving_test_window = np.array(moving_test_window)  # Making it an numpy array
+
+    for i in range(n_future_preds):
+        preds_one_step = model.predict(
+            moving_test_window)  # Note that this is already a scaled prediction so no need to rescale this
+        preds_moving.append(preds_one_step[0, 0])  # get the value from the numpy 2D array and append to predictions
+        preds_one_step = preds_one_step.reshape(1, 1)  # Reshaping the prediction to 3D array for concatenation with moving test window
+        moving_test_window = np.append(moving_test_window[:,1:], preds_one_step) # This is the new moving test window, where the first element from the window has been removed and the prediction  has been appended to the end
+        moving_test_window = moving_test_window.reshape(1, len(moving_test_window))
+
+    # preds_moving = scaler.inverse_transform(preds_moving)
+
+    return preds_moving
+
+
+def verify_and_clean_dataset_datetime_wise(df, start, end, freq):
+    datetime_arr = pd.date_range(start, end, freq=freq)
+
+    clean_df = pd.DataFrame()
+    df_datetime_series = pd.to_datetime(df.iloc[:,0])
+    df['timestamp'] = df_datetime_series
+    is_df_range_correct = False
+    for dt in datetime_arr:
+        if dt in df['timestamp'].values:
+            clean_df = clean_df.append(df.loc[df['timestamp']==dt])
+
+    if(len(clean_df.values) == len(datetime_arr)):
+        is_df_range_correct = True
+    clean_df.index = clean_df['timestamp']
+    clean_df = clean_df.drop(clean_df.columns[0])
+    return is_df_range_correct, clean_df

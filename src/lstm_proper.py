@@ -1,6 +1,7 @@
 from importlibs import *
 import glob
 from utility import *
+from keras.preprocessing.sequence import TimeseriesGenerator;
 
 
 def run_LSTM(regional_ISO_name):
@@ -10,33 +11,39 @@ def run_LSTM(regional_ISO_name):
     # normalize the dataset
     scaler = MinMaxScaler(feature_range=(0, 1))
     dataset = input.astype('float32')
-    # dataset = pd.DataFrame(scaler.fit_transform(dataset.values.reshape(-1, 1)), index=dataset.index)
 
     # split into train and test sets
     train_size = int(len(dataset) * SPLIT_FRACTION)
     train, test = dataset.iloc[0:train_size, :], dataset.iloc[train_size:len(dataset), :]
 
     train = pd.DataFrame(scaler.fit_transform(train.values.reshape(-1, 1)), index=train.index)
-    test = pd.DataFrame(scaler.fit_transform(test.values.reshape(-1, 1)), index=test.index)
-    print(len(train), len(test))
+    # test = pd.DataFrame(scaler.fit_transform(test.values.reshape(-1, 1)), index=test.index)
 
     # reshape into X=t and Y=t+1
     trainX, trainY = create_dataset(train.values, LOOK_BACK)  # trainSize * lookbackSize, trainSize * 1
-    testX, testY = create_dataset(test.values, LOOK_BACK)
+    # testX, testY = create_dataset(test.values, LOOK_BACK)
 
     # reshape input to be [samples, time steps, features]
-    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
-    testX = np.reshape(testX, (testX.shape[0], testX.shape[1], 1))
+    trainX = np.reshape(trainX, (trainX.shape[0], trainX.shape[1]))
+    # testX = np.reshape(testX, (testX.shape[0], testX.shape[1]))
 
     # create and fit the LSTM network
     model = Sequential()
     if not lstmModelFileExists(regional_ISO_name):
-        model.add(LSTM(units=4, input_shape=(LOOK_BACK, 1)))
-        model.add(Dense(1))
-        model.compile(loss='mean_squared_error', optimizer='adam')
+        # model.add(LSTM(units=10,
+        #                # activation='relu',
+        #                input_shape=(LOOK_BACK, 1)))
+        # model.add(Dense(1))
+        # model.compile(optimizer='adam',
+        #               loss='mean_absolute_error',
+        #               metrics=['accuracy'])
+        model.add(Dense(30, input_dim=LOOK_BACK, activation='sigmoid', kernel_initializer='he_uniform'))
+        model.add(Dense(1, activation='linear'))
+        opt = SGD(lr=0.01, momentum=0.9)
+        model.compile(loss='mean_absolute_error', optimizer=opt, metrics=['accuracy'])
         model.fit(trainX, trainY,
-                  epochs=EPOCH_SIZE, batch_size=BATCH_SIZE,
-                  validation_data=(testX, testY),
+                  epochs=EPOCH_SIZE,
+                  # validation_data=(testX, testY),
                   verbose=1)
         root_dir = '/output/' + regional_ISO_name
         fullpath = os.getcwd()
@@ -55,12 +62,12 @@ def run_LSTM(regional_ISO_name):
     label_dataset = pd.DataFrame(scaler.fit_transform(label_dataset.values.reshape(-1, 1)), index=label_dataset.index)
 
     futureX, futureY = create_dataset(label_dataset.values, LOOK_BACK)
-    futureX = np.reshape(futureX, (futureX.shape[0], futureX.shape[1], 1))
+    futureX = np.reshape(futureX, (futureX.shape[0], futureX.shape[1]))
 
     # make predictions
-    # trainPredict = model.predict(trainX)
-    # testPredict = model.predict(testX)
     futurePredict = model.predict(futureX)
+    # futurePredict = moving_test_window_preds(model, futureX)
+    # futurePredict = model.predict(testX)
 
     # invert predictions
     # trainPredict = scaler.inverse_transform(trainPredict)
@@ -72,14 +79,19 @@ def run_LSTM(regional_ISO_name):
 
     # invert label_dataset
     label_dataset = pd.DataFrame(scaler.inverse_transform(label_dataset), index=label_dataset.index)
-
+    # test = pd.DataFrame(scaler.inverse_transform(test))
+    # label_dataset = test
     # calculate root mean squared error
+
     # trainScore = math.sqrt(mean_squared_error(trainY, trainPredict[:, 0]))
     # print('Train Score: %.2f RMSE' % (trainScore))
-    # testScore = math.sqrt(mean_squared_error(testY, testPredict[:, 0]))
+
+    # testScore = sqrt(mean_squared_error(test, futurePredict[:, 0]))
     # print('Test Score: %.2f RMSE' % (testScore))
-    futureScore = sqrt(mean_squared_error(futureY, futurePredict[:, 0]))
-    print('Future Predict Score: %.2f RMSE' % (futureScore))
+
+    # futureScore = sqrt(mean_squared_error(futureY, futurePredict[:, 0]))
+    # futureMAE = mean_absolute_error(futureY, futurePredict[:,0])
+    # print('Future Predict Score: %.2f RMSE' % futureScore, ', MAE = ' % futureMAE)
 
     # ------
 
@@ -88,13 +100,9 @@ def run_LSTM(regional_ISO_name):
     fullData = np.append(dataset.values, label_dataset)
     df['dataset'][:] = pd.Series(fullData.flatten())
 
-    # df['train'][0:len(trainPredict)] = pd.Series(trainPredict.flatten())
-    # df['test'][0:len(testPredict)] = pd.Series(testPredict.flatten())
-    # df['future'][0:len(futurePredict)] = pd.Series(futurePredict.flatten())
-
     future_datetime_arr = pd.date_range(start='2020-12-01 00:00:00', freq='5T', periods=len(futurePredict))
-    df_future = pd.DataFrame({'Predicted':futurePredict[:,0],'Actual':futureY[:,0]},
-                            index=future_datetime_arr)
+    df_future = pd.DataFrame({'Predicted': futurePredict[:, 0], 'Actual': futureY[:, 0]},
+                             index=future_datetime_arr)
 
     # ========= PLOT =======
     xAxis = label_dataset.index.to_numpy()
@@ -105,24 +113,15 @@ def run_LSTM(regional_ISO_name):
                 + regional_ISO_name + '/'
                 + regional_ISO_name + SUB_FILE_NAME_PLOT_DATASET)
 
-    # f2 = plt.figure()
-    # plt.plot(xAxis, label_dataset.values, label='Actual', color="blue")
-    # y = np.concatenate([futurePredict[:, 0], np.zeros(13)])
-    # plt.plot(xAxis, y, label='Predicted', color="green")
-    # plt.legend()
-    # plt.title(regional_ISO_name + ': 1 Dec 2020')
-    # plt.savefig('../output/'
-    #             + regional_ISO_name + '/'
-    #             + regional_ISO_name + SUB_FILE_NAME_PLOT_FUTURE)
-
-
-    # f3 = plt.figure()
-    df_future.plot(use_index=True, x_compat=True)
+    # df_future.plot(use_index=True, x_compat=True, colors=['#BB0000', '#0000BB'])
+    df_future.plot(color=['#db702e', '#3086b3'])
     plt.savefig('../output/'
                 + regional_ISO_name + '/'
                 + regional_ISO_name + SUB_FILE_NAME_PLOT_FUTURE)
     plt.show()
 
+
 # ==========================================================================================================
 
+# run_LSTM('NYISO')
 run_LSTM('PJM')
