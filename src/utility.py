@@ -56,6 +56,38 @@ def prepareDataFor(isLabel: bool, regionalISOName, dateTimeColumnName, zoneFilte
     return df
 
 
+def prepareDataFromSpecificFolder(isLabel: bool, regionalISOName, directoryName, dateTimeColumnName, zoneFilterColumnName, zoneName, lbmpColumnName):
+    innerDirPath = regionalISOName
+    root_dir = '/dataset/' + innerDirPath
+    if isLabel:
+        root_dir = '/labels/' + regionalISOName
+
+    fullpath = os.getcwd()
+    projectPath = Path(fullpath).parents[0]
+    datasetDirectoryPath = Path(str(projectPath) + root_dir)
+
+    data = []
+    totalDataSize = 0
+    for file in sorted(datasetDirectoryPath.iterdir()):
+        if Path.is_dir(file) and file.name == directoryName:
+            for f in sorted(file.iterdir()):
+                if f.name.endswith('.csv'):
+                    df = pd.read_csv(f, parse_dates=True, index_col=dateTimeColumnName, header=0)
+                    df.index = pd.to_datetime(df.index, format="%Y-%m-%d-%H-%M-%S")
+
+                    df_filtered = df
+                    if not (zoneFilterColumnName is None) and not (zoneName is None):
+                        df_filtered = df.loc[df[zoneFilterColumnName] == zoneName]
+                        df_filtered = df_filtered[lbmpColumnName]
+
+                    data.append(df_filtered)
+                    totalDataSize = totalDataSize + df_filtered.size
+                    print('--- Size of new data after append: ', totalDataSize, ' File: ', f)
+
+    df = pd.concat(data)
+    df.sort_index().to_csv(os.path.join(datasetDirectoryPath, 'dataset_'+directoryName+'.csv'))
+    return df
+
 # convert an array of values into a dataset matrix
 def create_dataset(dataset, look_back=1):
     dataX, dataY = [], []
@@ -183,19 +215,21 @@ def moving_test_window_preds(model, futureX, n_future_preds=288):
     return preds_moving
 
 
-def verify_and_clean_dataset_datetime_wise(df, start, end, freq):
+def verify_and_clean_dataset_datetime_wise(df, timestampColumnName, start, end, freq):
     datetime_arr = pd.date_range(start, end, freq=freq)
 
     clean_df = pd.DataFrame()
     df_datetime_series = pd.to_datetime(df.iloc[:,0])
-    df['timestamp'] = df_datetime_series
+    df[timestampColumnName] = df_datetime_series
     is_df_range_correct = False
     for dt in datetime_arr:
-        if dt in df['timestamp'].values:
-            clean_df = clean_df.append(df.loc[df['timestamp']==dt])
+        dt_formatted = pd.to_datetime(dt, format="%Y-%m-%d-%H-%M-%S")
+        if dt_formatted in df[timestampColumnName].values:
+            clean_df = clean_df.append(df.loc[df[timestampColumnName]==dt])
+            print(clean_df.describe())
 
     if(len(clean_df.values) == len(datetime_arr)):
         is_df_range_correct = True
-    clean_df.index = clean_df['timestamp']
-    clean_df = clean_df.drop(clean_df.columns[0])
+    clean_df.index = clean_df[timestampColumnName]
+    clean_df = clean_df.reset_index(drop=True)
     return is_df_range_correct, clean_df
