@@ -10,13 +10,15 @@ switcher = {
 
 def fetchData(isLabel: bool, regionalISOName):
     root_dir = '/dataset/' + regionalISOName
+    filename = FILENAME_PRICE_DATASET_MAY_JUN_2019
     if isLabel:
         root_dir = '/labels/' + regionalISOName
+        filename = FILENAME_PRICE_DATASET_JULY_2019
 
     fullpath = os.getcwd()
     projectPath = Path(fullpath).parents[0]
     datasetDirectoryPath = Path(str(projectPath) + root_dir)
-    return pd.read_csv(os.path.join(datasetDirectoryPath, FILENAME_PREPARED_DATASET),
+    return pd.read_csv(os.path.join(datasetDirectoryPath, filename),
                        index_col=switcher[regionalISOName][0])
 
 
