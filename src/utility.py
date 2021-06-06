@@ -100,6 +100,14 @@ def create_dataset(dataset, look_back=1):
     return np.array(dataX), np.array(dataY)
 
 
+def createHolyGrail(dataset, look_back):
+    dataX= pd.DataFrame()
+    for i in range(len(dataset) - look_back - 1):
+        a = dataset[i:(i + look_back)]
+        dataX = dataX.append(pd.Series(a[:,0]), ignore_index=True)
+        # dataY.append([dataset[i + look_back, 0]])
+    return dataX
+
 def lstmModelFileExists(regional_ISO_name):
     root_dir = '/output/' + regional_ISO_name
     fullpath = os.getcwd()

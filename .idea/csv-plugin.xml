@@ -17,14 +17,14 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/dataset/CAISO/07-2019/July-2019.csv">
+        <entry key="/dataset/CAISO/2017/20171001-20171201 CAISO Real-time Price.csv">
           <value>
             <Attribute>
-              <option name="separator" value=":" />
+              <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="/dataset/CAISO/2017/20171001-20171201 CAISO Real-time Price.csv">
+        <entry key="/dataset/CAISO/2019/20191001-20191201 CAISO Real-time Price.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
@@ -66,13 +66,6 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/dataset/NYISO/07-2019/20190701realtime_zone_csv/20190701realtime_zone.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="/dataset/NYISO/DEC-1/19991201realtime_zone.csv">
           <value>
             <Attribute>
@@ -108,6 +101,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/dataset/PJM/07-2019/20190701realtime_zone.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/dataset/PJM/dataset_05-06-2019.csv">
           <value>
             <Attribute>
@@ -122,49 +122,14 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/labels/CAISO/dataset_07-2019.csv">
+        <entry key="/labels/ISONE/dataset.csv">
           <value>
             <Attribute>
               <option name="separator" value=":" />
             </Attribute>
           </value>
         </entry>
-        <entry key="/labels/ISONE/dataset_07-2019.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value=":" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/labels/NYISO/dataset_07-2019.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value=":" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/labels/PJM/dataset_07-2019.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value=":" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/output/CAISO/JUL2019_arima_prediction.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/output/NYISO/JUL2019_arima_prediction.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/output/PJM/JUL2019_arima_prediction.csv">
+        <entry key="/output/CAISO/arima/holyGrail_12.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
@@ -172,13 +137,6 @@
           </value>
         </entry>
         <entry key="/output/PJM/arima/arima_prediction.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="/src/test.py">
           <value>
             <Attribute>
               <option name="separator" value="," />
