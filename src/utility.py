@@ -232,14 +232,18 @@ def verify_and_clean_dataset_datetime_wise(df, timestampColumnName, start, end, 
     df_datetime_series = pd.to_datetime(df.iloc[:,0])
     df[timestampColumnName] = df_datetime_series
     is_df_range_correct = False
+    missingDates = []
     for dt in datetime_arr:
         dt_formatted = pd.to_datetime(dt, format="%Y-%m-%d-%H-%M-%S")
         if dt_formatted in df[timestampColumnName].values:
             clean_df = clean_df.append(df.loc[df[timestampColumnName]==dt])
-            print(clean_df.describe())
+            # print(clean_df.shape)
+        else:
+            print('Data missing for: ',dt_formatted)
+            missingDates.append(dt_formatted)
 
     if(len(clean_df.values) == len(datetime_arr)):
         is_df_range_correct = True
     clean_df.index = clean_df[timestampColumnName]
     clean_df = clean_df.reset_index(drop=True)
-    return is_df_range_correct, clean_df
+    return is_df_range_correct, clean_df, missingDates

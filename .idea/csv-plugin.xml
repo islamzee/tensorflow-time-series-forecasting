@@ -59,6 +59,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/dataset/ISONE/dataset.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/dataset/ISONE/dataset_07-2019.csv">
           <value>
             <Attribute>
@@ -133,6 +140,13 @@
           <value>
             <Attribute>
               <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/output/CAISO/processed_raw_prices_by_day/day1.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
             </Attribute>
           </value>
         </entry>

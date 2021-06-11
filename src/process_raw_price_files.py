@@ -22,9 +22,16 @@ def getDaywiseDatasetFor(regionalISOName):
     dest_dir = Path(str(projectPath) + output_dir)
     if not os.path.exists(dest_dir):
         dest_dir.mkdir(exist_ok=True)
+    else:
+        filelist = [f for f in os.listdir(dest_dir)]
+        for f in filelist:
+            os.remove(os.path.join(dest_dir, f))
+
     for dfx in listOfDfDaywise:
         filename = 'day' + str(dfx.day[0]) + '.csv'
+        dfx = dfx.drop('day', axis='columns')
         dfx.to_csv(dest_dir / filename)
+
 
 
 getDaywiseDatasetFor('CAISO')
